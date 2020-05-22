@@ -12,6 +12,7 @@ public class Config implements Serializable {
         return String.valueOf(id);
     }
 
+    //每次更新编号后都进行保存
     public void increment() {
         id++;
         new Serialization<Config>().serialize(this, "config.txt");

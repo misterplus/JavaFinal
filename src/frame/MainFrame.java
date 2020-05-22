@@ -44,7 +44,7 @@ public class MainFrame extends JFrame implements ActionListener {
         mI[1].addActionListener(this);
 
         JLabel l_type = new JLabel("收支类型：");
-        c_type = new JComboBox<>(new String[]{"收入/支出", "收入", "支出"});
+        c_type = new JComboBox<>(new String[]{"收入/支出", "收入", "支出"}); //支持查询所有收支记录
         JLabel l_fromdate = new JLabel("起始时间");
         t_fromdate = new JTextField(8);
         JLabel l_todate = new JLabel("终止时间");
@@ -81,8 +81,8 @@ public class MainFrame extends JFrame implements ActionListener {
                 BorderFactory.createTitledBorder("收支明细信息"),
                 BorderFactory.createEmptyBorder(5, 5, 5, 5)));
         l_bal = new JLabel();
-        table = new JTable(new IASTableModel(data));
-        table.getTableHeader().setReorderingAllowed(false);
+        table = new JTable(new IASTableModel(data)); //通过反序列化后得到的链表对象来构造一个自定义的TableModel 以更高效地实现功能
+        table.getTableHeader().setReorderingAllowed(false); //禁止拖动表头
         JScrollPane scrollpane = new JScrollPane(table);
         scrollpane.setPreferredSize(new Dimension(580, 350));
         scrollpane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
@@ -90,11 +90,12 @@ public class MainFrame extends JFrame implements ActionListener {
         p_detail.add(l_bal);
         p_detail.add(scrollpane);
         c.add(p_detail, "South");
-        updateBalance();
+        this.updateBalance();
         this.setResizable(false);
         this.setSize(600, 580);
         Dimension screen = this.getToolkit().getScreenSize();
         this.setLocation((screen.width - this.getSize().width) / 2, (screen.height - this.getSize().height) / 2);
+        this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         this.setVisible(true);
     }
 
@@ -102,31 +103,33 @@ public class MainFrame extends JFrame implements ActionListener {
         Object temp = e.getSource();
         IASTableModel model = ((IASTableModel) table.getModel());
         if (temp == mI[0]) {
-            new ModifyPwdFrame(this.credentials);
+            new ModifyPwdFrame(this.credentials); //打开修改密码窗口并传入凭据
         } else if (temp == mI[1]) {
             dispose();
         } else if (temp == m_FMEdit) {
             BalEditFrame bef;
             try {
-                bef = new BalEditFrame(table, new Serialization<Config>().deserialize("config.txt"));
+                bef = new BalEditFrame(table, new Serialization<Config>().deserialize("config.txt")); //类似打开主窗口 只是这里传入编号
             } catch (EOFException ex) {
                 System.err.println("数据为空或有误，传入空配置文件");
                 bef = new BalEditFrame(table, new Config());
             }
             bef.addWindowListener(new WindowAdapter() {
                 @Override
-                public void windowClosing(WindowEvent e) {
+                public void windowClosing(WindowEvent e) { //监听修改窗口的关闭 关闭则保存并更新主窗口数据
                     model.save();
                     updateBalance();
                     table.updateUI();
                 }
             });
-        } else if (temp == b_select1) {
+        } else if (temp == b_select1) { //按日期查询 模式+3
             model.setInterval(t_fromdate.getText(), t_todate.getText());
             model.setMode(3 + c_type.getSelectedIndex());
+            updateBalance();
             table.updateUI();
-        } else if (temp == c_type) {
+        } else if (temp == c_type) { //按种类查询 选择下拉框中选项后直接更新
             model.setMode(c_type.getSelectedIndex());
+            updateBalance();
             table.updateUI();
         }
 

@@ -1,17 +1,19 @@
 package common;
 
-import javax.swing.*;
+import static javax.swing.JOptionPane.*;
 
+//简化弹窗代码
 public class Utility {
+
     public static void error(String message) {
-        JOptionPane.showMessageDialog(null, message, "错误", JOptionPane.ERROR_MESSAGE);
+        showMessageDialog(null, message, "错误", ERROR_MESSAGE);
     }
 
     public static void info(String message) {
-        JOptionPane.showMessageDialog(null, message, "提示", JOptionPane.INFORMATION_MESSAGE);
+        showMessageDialog(null, message, "提示", INFORMATION_MESSAGE);
     }
 
     public static boolean confirm(String message) {
-        return JOptionPane.showConfirmDialog(null, message, "确认", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE) == JOptionPane.YES_OPTION;
+        return showConfirmDialog(null, message, "确认", YES_NO_OPTION, QUESTION_MESSAGE) == YES_OPTION;
     }
 }

@@ -2,6 +2,10 @@ package common;
 
 import java.io.Serializable;
 
+/**
+ * 凭据类
+ * 用于存储用户名和密码 承担了验证登录等工作
+ */
 public class Credentials implements Serializable {
     private static final long serialVersionUID = 2L;
     private String username, password;

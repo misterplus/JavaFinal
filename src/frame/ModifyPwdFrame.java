@@ -44,6 +44,7 @@ public class ModifyPwdFrame extends JFrame implements ActionListener {
         this.setSize(280, 160);
         Dimension screen = this.getToolkit().getScreenSize();
         this.setLocation((screen.width - this.getSize().width) / 2, (screen.height - this.getSize().height) / 2);
+        this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         this.setVisible(true);
     }
 
@@ -51,13 +52,13 @@ public class ModifyPwdFrame extends JFrame implements ActionListener {
         if (b_cancel == e.getSource()) {
             dispose();
         } else if (b_ok == e.getSource()) {
-            if (Arrays.equals(t_newPWD.getPassword(), t_newPWDAgain.getPassword())) {
-                if (t_newPWD.getPassword().length > 6) {
+            if (Arrays.equals(t_newPWD.getPassword(), t_newPWDAgain.getPassword())) { //重复密码相同
+                if (t_newPWD.getPassword().length >= 6) { //新密码长度必须大于6
                     if (this.credentials.validate(this.credentials.getUsername(), String.valueOf(t_oldPWD.getPassword()))) {
                         this.credentials.setPassword(String.valueOf(t_newPWD.getPassword()));
                         new Serialization<Credentials>().serialize(this.credentials, "pwd.txt");
                         info("修改成功！");
-                        dispose();
+                        System.exit(0); //修改完退出 符合要求
                     } else {
                         error("旧密码错误！");
                     }

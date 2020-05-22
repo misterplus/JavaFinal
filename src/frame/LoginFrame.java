@@ -47,6 +47,7 @@ public class LoginFrame extends JFrame implements ActionListener {
 
         Dimension screen = this.getToolkit().getScreenSize();
         this.setLocation((screen.width - this.getSize().width) / 2, (screen.height - this.getSize().height) / 2);
+        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setVisible(true);
     }
 
@@ -55,18 +56,18 @@ public class LoginFrame extends JFrame implements ActionListener {
             dispose();
             System.exit(0);
         } else if (b_ok == e.getSource()) {
-            if (credentials.isNew()) {
-                if (t_user.getText().isEmpty()) {
+            if (credentials.isNew()) { //凭据为空 则将输入的用户名与密码记录为初始凭据
+                if (t_user.getText().isEmpty()) { //用户名不为空
                     error("用户名不能为空！");
-                } else if (t_pwd.getPassword().length < 6) {
+                } else if (t_pwd.getPassword().length < 6) { //密码至少6位
                     error("密码不能少于6位！");
                 } else {
                     credentials = new Credentials(t_user.getText(), String.valueOf(t_pwd.getPassword()));
-                    new Serialization<Credentials>().serialize(credentials, "pwd.txt");
+                    new Serialization<Credentials>().serialize(credentials, "pwd.txt"); //保存初始凭据
                     login();
                 }
             } else {
-                if (credentials.validate(t_user.getText(), String.valueOf(t_pwd.getPassword()))) {
+                if (credentials.validate(t_user.getText(), String.valueOf(t_pwd.getPassword()))) { //验证凭据
                     login();
                 } else {
                     error("用户名密码错误！");
@@ -75,6 +76,11 @@ public class LoginFrame extends JFrame implements ActionListener {
         }
     }
 
+    /**
+     * 登录的实现
+     * 将数据文件反序列化为对象后传入MainFrame构造方法
+     * 同时传入凭据，供修改密码时验证以及显示窗口标题
+     */
     private void login() {
         try {
             new MainFrame(this.credentials, new Serialization<List<IAS>>().deserialize("data.txt"));

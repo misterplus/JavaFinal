@@ -6,8 +6,6 @@ import data.IASTableModel;
 import exception.DuplicationException;
 
 import javax.swing.*;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -16,8 +14,8 @@ import static common.Utility.error;
 import static common.Utility.info;
 
 public class BalEditFrame extends JFrame implements ActionListener {
-    private static final JComboBox<String> IN = new JComboBox<>(new String[]{"人情", "工资", "奖金", "其他"});
-    private static final JComboBox<String> OUT = new JComboBox<>(new String[]{"购物", "餐饮", "居家", "交通", "娱乐", "人情", "其他"});
+    private static final JComboBox<String> IN = new JComboBox<>(new String[]{"人情", "工资", "奖金", "其他"}); //收入种类
+    private static final JComboBox<String> OUT = new JComboBox<>(new String[]{"购物", "餐饮", "居家", "交通", "娱乐", "人情", "其他"}); //支出种类
     private JTextField t_id, t_date, t_bal;
     private JComboBox<String> c_type, c_item;
     private JButton b_update, b_delete, b_new, b_clear;
@@ -36,7 +34,7 @@ public class BalEditFrame extends JFrame implements ActionListener {
         t_id = new JTextField(8);
         t_date = new JTextField(8);
         t_bal = new JTextField(8);
-        t_id.setText(this.config.getId());
+        t_id.setText(this.config.getId()); //编号不可修改 直接从记录读取
         t_id.setEditable(false);
 
         c_type = new JComboBox<>(new String[]{"收入", "支出"});
@@ -94,28 +92,26 @@ public class BalEditFrame extends JFrame implements ActionListener {
         b_new.addActionListener(this);
         b_clear.addActionListener(this);
         c_type.addActionListener(this);
-        table.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                IASTableModel model = (IASTableModel) table.getModel();
-                if (model.isNull(table.getSelectedRow()))
-                    return;
-                IAS ias = model.getValueAt(table.getSelectedRow());
-                if (ias == null)
-                    return;
-                t_id.setText(String.valueOf(ias.getId()));
-                t_date.setText(ias.getDate());
-                t_bal.setText(String.valueOf(ias.getAmount()));
-                c_type.setSelectedItem(ias.getType());
-                c_item.setSelectedItem(ias.getCategory());
-            }
+        table.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION); //只能选中一行记录
+        table.getSelectionModel().addListSelectionListener(e -> { //监听更改选中事件 自动填写左侧文本框
+            IASTableModel model = (IASTableModel) table.getModel();
+            if (model.isNull(table.getSelectedRow()))
+                return;
+            IAS ias = model.getValueAt(table.getSelectedRow());
+            if (ias == null)
+                return;
+            t_id.setText(String.valueOf(ias.getId()));
+            t_date.setText(ias.getDate());
+            t_bal.setText(String.valueOf(ias.getAmount()));
+            c_type.setSelectedItem(ias.getType());
+            c_item.setSelectedItem(ias.getCategory());
         });
 
         this.setResizable(false);
         this.setSize(800, 300);
         Dimension screen = this.getToolkit().getScreenSize();
         this.setLocation((screen.width - this.getSize().width) / 2, (screen.height - this.getSize().height) / 2);
+        this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         this.setVisible(true);
     }
 
@@ -126,16 +122,16 @@ public class BalEditFrame extends JFrame implements ActionListener {
                 model.update(table.getSelectedRow(), getNewIAS());
             } else if (b_delete == e.getSource()) {
                 model.delete(table.getSelectedRow());
-                clearFields();
+                clearFields(); //删除记录后重置编号并清空文本框 符合要求
             } else if (b_new == e.getSource()) {
                 model.add(getNewIAS());
-                this.config.increment();
+                this.config.increment(); //新增记录后编号加一
                 this.t_id.setText(this.config.getId());
                 info("添加成功！");
             } else if (b_clear == e.getSource()) {
                 clearFields();
             } else if (c_type == e.getSource()) {
-                switch (c_type.getSelectedIndex()) {
+                switch (c_type.getSelectedIndex()) { //根据收入/支出下拉框的选择 更改可选类别
                     case 0: {
                         c_item.setModel(IN.getModel());
                         break;
@@ -145,12 +141,7 @@ public class BalEditFrame extends JFrame implements ActionListener {
                     }
                 }
             }
-            SwingUtilities.invokeLater(new Runnable() {
-                @Override
-                public void run() {
-                    table.updateUI();
-                }
-            });
+            SwingUtilities.invokeLater(() -> table.updateUI()); //更新表格
         } catch (NullPointerException ex) {
             System.err.println("因日期格式错误传入null");
         } catch (NumberFormatException ex) {
@@ -166,10 +157,18 @@ public class BalEditFrame extends JFrame implements ActionListener {
         }
     }
 
+    /**
+     * 从文本框和下拉框数据组装一个新收支记录对象
+     * @return 组装后的对象
+     * @throws NullPointerException 日期不存在时会抛出NPE 忽略即可
+     */
     private IAS getNewIAS() throws NullPointerException {
         return new IAS(Long.parseLong(t_id.getText()), Double.parseDouble(t_bal.getText()), IAS.parseDate(t_date.getText()), (String) c_type.getSelectedItem(), (String) c_item.getSelectedItem());
     }
 
+    /**
+     * 清空文本框并重置编号
+     */
     private void clearFields() {
         this.t_bal.setText("");
         this.t_date.setText("");
