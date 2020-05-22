@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Encoding">
+    <file url="file://$PROJECT_DIR$/src/MoneyManager.java" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/src/common/Config.java" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/src/common/Credentials.java" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/src/common/IAS.java" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/src/common/Utility.java" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/src/data/IASTableModel.java" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/src/data/Reference.java" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/src/data/Serialization.java" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/src/frame/BalEditFrame.java" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/src/frame/LoginFrame.java" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/src/frame/MainFrame.java" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/src/frame/ModifyPwdFrame.java" charset="GBK" />
+  </component>
+</project>
