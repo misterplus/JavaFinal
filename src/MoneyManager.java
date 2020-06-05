@@ -10,7 +10,6 @@ import static common.Utility.info;
 import static data.Reference.init;
 
 public class MoneyManager {
-
     public static void main(String[] args) {
         try {
             init();

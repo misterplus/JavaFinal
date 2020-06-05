@@ -81,6 +81,7 @@ public class BalEditFrame extends JFrame implements ActionListener {
 
         table = new JTable(t.getModel());
         table.getTableHeader().setReorderingAllowed(false);
+        table.getTableHeader().setResizingAllowed(false);
         JScrollPane scrollpane = new JScrollPane(table);
         scrollpane.setViewportView(table);
         scrollpane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);

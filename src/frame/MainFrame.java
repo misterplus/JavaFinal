@@ -83,6 +83,7 @@ public class MainFrame extends JFrame implements ActionListener {
         l_bal = new JLabel();
         table = new JTable(new IASTableModel(data)); //通过反序列化后得到的链表对象来构造一个自定义的TableModel 以更高效地实现功能
         table.getTableHeader().setReorderingAllowed(false); //禁止拖动表头
+        table.getTableHeader().setResizingAllowed(false); //禁止更改宽度
         JScrollPane scrollpane = new JScrollPane(table);
         scrollpane.setPreferredSize(new Dimension(580, 350));
         scrollpane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);

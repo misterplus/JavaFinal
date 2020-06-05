@@ -28,7 +28,7 @@ public class Credentials implements Serializable {
     }
 
     public boolean validate(String username, String password) {
-        return this.username.equals(username) && this.password.equals(password);
+        return this.username.equals(username.trim()) && this.password.equals(password);
     }
 
     public boolean isNew() {
