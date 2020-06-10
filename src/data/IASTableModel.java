@@ -4,8 +4,8 @@ import common.IAS;
 import exception.DuplicationException;
 
 import javax.swing.table.AbstractTableModel;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.Objects;
 
 import static common.IAS.parseDate;
 import static common.IAS.parseLocalDate;
@@ -19,13 +19,12 @@ import static common.Utility.info;
 public class IASTableModel extends AbstractTableModel {
 
     private static final String[] COLUMN_NAME = {"编号", "日期", "类型", "内容", "金额"};
-    private List<IAS> data;
-    private int mode; //用于在各种查询状态下切换
+    private List<IAS> data, display_data; //为了避免反复遍历同一个List 建立两个List 一个用于存储数据 一个用于显示
     private long from, to;
 
     public IASTableModel(List<IAS> data) {
         this.data = data;
-        this.mode = 0;
+        this.display_data = data;
     }
 
     /**
@@ -47,7 +46,7 @@ public class IASTableModel extends AbstractTableModel {
      */
     public void update(int rowIndex, IAS ias) {
         if (confirm("确认修改？")) {
-            Objects.requireNonNull(getValueAt(rowIndex)).update(ias.getAmount(), ias.getActualDate(), ias.getType(), ias.getCategory());
+            this.getValueAt(rowIndex).update(ias.getAmount(), ias.getActualDate(), ias.getType(), ias.getCategory());
             info("修改成功！");
         }
     }
@@ -58,7 +57,7 @@ public class IASTableModel extends AbstractTableModel {
      */
     public void delete(int rowIndex) {
         if (confirm("确认删除？")) {
-            this.data.remove(Objects.requireNonNull(getValueAt(rowIndex)));
+            this.data.remove(this.getValueAt(rowIndex));
             info("删除成功！");
         }
     }
@@ -66,7 +65,7 @@ public class IASTableModel extends AbstractTableModel {
     //继承于AbstractTableModel必须实现的方法
     @Override
     public int getRowCount() {
-        return data.size() + 25;
+        return this.display_data.size() + 25;
     }
 
     @Override
@@ -98,41 +97,9 @@ public class IASTableModel extends AbstractTableModel {
      * @return 当前净额
      */
     public double getBalance() {
-        switch (this.mode) {
-            case 0: {
-                return this.getBalance("");
-            }
-            case 1: {
-                return this.getBalance("收入");
-            }
-            case 2: {
-                return this.getBalance("支出");
-            }
-            case 3: {
-                return this.getBalance("", this.from, this.to);
-            }
-            case 4: {
-                return this.getBalance("收入", this.from, this.to);
-            }
-            case 5: {
-                return this.getBalance("支出", this.from, this.to);
-            }
-            default: {
-                return 0;
-            }
-        }
-    }
-
-    public double getBalance(String type) {
-        return getBalance(type, 0, Long.MAX_VALUE);
-    }
-
-    public double getBalance(String type, long from, long to) {
         double d = 0;
-        for (IAS ias : this.data) {
-            long l = Long.parseLong(ias.getDate());
-            if (ias.getType().contains(type) && l >= from && l <= to) //使用contains而非equals 为的是适配不限制种类的情况
-                d += ias.getAmount();
+        for (IAS ias : this.display_data) {
+            d += ias.getAmount();
         }
         return d;
     }
@@ -149,8 +116,6 @@ public class IASTableModel extends AbstractTableModel {
             return ""; //多余空行不进行显示
         }
         IAS ias = getValueAt(rowIndex); //获得某行的收支记录
-        if (ias == null)
-            return "";
         switch (columnIndex) {
             case 0: {
                 return String.valueOf(ias.getId());
@@ -172,8 +137,12 @@ public class IASTableModel extends AbstractTableModel {
         }
     }
 
+    public IAS getValueAt(int rowIndex) {
+        return this.display_data.get(rowIndex);
+    }
+
     public boolean isNull(int rowIndex) {
-        return rowIndex >= this.data.size();
+        return rowIndex >= this.display_data.size();
     }
 
     /**
@@ -191,65 +160,62 @@ public class IASTableModel extends AbstractTableModel {
     }
 
     public void setMode(int mode) {
-        this.mode = mode;
+        this.display_data = getDisplayData(mode);
     }
 
     public void save() {
         new Serialization<List<IAS>>().serialize(this.data, "data.txt");
     }
 
+    private List<IAS> filter(long from, long to) {
+        return filter("", from, to);
+    }
+
+    private List<IAS> filter(String type) {
+        return filter(type,  10000101, Long.MAX_VALUE);
+    }
+
     /**
-     * 获取某行的收支记录对象
-     * 进行了大量的遍历 以时间复杂度换取空间复杂度 避免大量重复数据的冗余
-     * @param rowIndex 行下标
-     * @return 对应的收支记录
+     *
+     * @param type 过滤的收支记录种类
+     * @param from 起始时间
+     * @param to 终止时间
+     * @return 满足条件的收支记录List
      */
-    public IAS getValueAt(int rowIndex) {
-        switch (this.mode) {
+    private List<IAS> filter(String type, long from, long to) {
+        List<IAS> display_data = new LinkedList<>();
+        for (IAS ias : this.data) {
+            long l = Long.parseLong(ias.getDate());
+            if (l >= from && l <= to && ias.getType().contains(type)) { //使用contains而非equals 为的是适配重载
+                display_data.add(ias);
+            }
+        }
+        return display_data;
+    }
+
+    private List<IAS> getDisplayData(int mode) {
+        switch (mode) {
             case 0: { //全部记录 无日期限制
-                return this.data.get(rowIndex);
+                return this.data;
             }
             case 1: { //收入记录 无日期限制
-                return getOnly(rowIndex, "收入");
+                return filter("收入");
             }
             case 2: { //支出记录 无日期限制
-                return getOnly(rowIndex, "支出");
+                return filter("支出");
             }
             case 3: { //全部记录 有日期限制
-                return getOnly(rowIndex, this.from, this.to);
+                return filter(this.from, this.to);
             }
             case 4: { //收入记录 有日期限制
-                return getOnly(rowIndex, "收入", this.from, this.to);
+                return filter("收入", this.from, this.to);
             }
             case 5: { //支出记录 有日期限制
-                return getOnly(rowIndex, "支出", this.from, this.to);
+                return filter("支出", this.from, this.to);
             }
             default: {
                 return null;
             }
         }
-    }
-
-    //多次重载提高复用性
-    private IAS getOnly(int rowIndex, String type) {
-        return getOnly(rowIndex, type, 0, Long.MAX_VALUE);
-    }
-
-    private IAS getOnly(int rowIndex, long from, long to) {
-        return getOnly(rowIndex, "", from, to);
-    }
-
-    private IAS getOnly(int rowIndex, String type, long from, long to) {
-        int i = -1;
-        for (IAS ias : this.data) {
-            long l = Long.parseLong(ias.getDate());
-            if (l >= from && l <= to && ias.getType().contains(type)) { //使用contains 理由同上
-                i++;
-                if (i == rowIndex) {
-                    return ias;
-                }
-            }
-        }
-        return null;
     }
 }

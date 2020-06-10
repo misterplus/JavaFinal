@@ -99,8 +99,6 @@ public class BalEditFrame extends JFrame implements ActionListener {
             if (model.isNull(table.getSelectedRow()))
                 return;
             IAS ias = model.getValueAt(table.getSelectedRow());
-            if (ias == null)
-                return;
             t_id.setText(String.valueOf(ias.getId()));
             t_date.setText(ias.getDate());
             t_bal.setText(String.valueOf(ias.getAmount()));
