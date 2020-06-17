@@ -20,11 +20,13 @@ public class IASTableModel extends AbstractTableModel {
 
     private static final String[] COLUMN_NAME = {"编号", "日期", "类型", "内容", "金额"};
     private List<IAS> data, display_data; //为了避免反复遍历同一个List 建立两个List 一个用于存储数据 一个用于显示
+    private int mode;
     private long from, to;
 
     public IASTableModel(List<IAS> data) {
         this.data = data;
         this.display_data = data;
+        this.mode = 0;
     }
 
     /**
@@ -99,7 +101,13 @@ public class IASTableModel extends AbstractTableModel {
     public double getBalance() {
         double d = 0;
         for (IAS ias : this.display_data) {
-            d += ias.getAmount();
+            switch (ias.getType()) {
+                case "收入":
+                    d += ias.getAmount();
+                    continue;
+                case "支出":
+                    d -= ias.getAmount();
+            }
         }
         return d;
     }
@@ -159,7 +167,12 @@ public class IASTableModel extends AbstractTableModel {
         return false;
     }
 
+    public void sync() {
+        this.display_data = getDisplayData(this.mode);
+    }
+
     public void setMode(int mode) {
+        this.mode = mode;
         this.display_data = getDisplayData(mode);
     }
 

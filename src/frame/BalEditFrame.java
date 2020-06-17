@@ -118,12 +118,18 @@ public class BalEditFrame extends JFrame implements ActionListener {
         try {
             IASTableModel model = ((IASTableModel) this.table.getModel());
             if (b_update == e.getSource()) {
-                model.update(table.getSelectedRow(), getNewIAS());
+                IAS ias = getNewIAS();
+                if (ias == null)
+                    return;
+                model.update(table.getSelectedRow(), ias);
             } else if (b_delete == e.getSource()) {
                 model.delete(table.getSelectedRow());
                 clearFields(); //删除记录后重置编号并清空文本框 符合要求
             } else if (b_new == e.getSource()) {
-                model.add(getNewIAS());
+                IAS ias = getNewIAS();
+                if (ias == null)
+                    return;
+                model.add(ias);
                 this.config.increment(); //新增记录后编号加一
                 this.t_id.setText(this.config.getId());
                 info("添加成功！");
@@ -140,6 +146,7 @@ public class BalEditFrame extends JFrame implements ActionListener {
                     }
                 }
             }
+            model.sync();
             SwingUtilities.invokeLater(() -> table.updateUI()); //更新表格
         } catch (NullPointerException ex) {
             System.err.println("因日期格式错误传入null");
@@ -162,7 +169,12 @@ public class BalEditFrame extends JFrame implements ActionListener {
      * @throws NullPointerException 日期不存在时会抛出NPE 忽略即可
      */
     private IAS getNewIAS() throws NullPointerException {
-        return new IAS(Long.parseLong(t_id.getText()), Double.parseDouble(t_bal.getText()), IAS.parseDate(t_date.getText()), (String) c_type.getSelectedItem(), (String) c_item.getSelectedItem());
+        double d = Double.parseDouble(t_bal.getText());
+        if (d <= 0) {
+            error("金额必须大于0！");
+            return null;
+        }
+        return new IAS(Long.parseLong(t_id.getText()), d, IAS.parseDate(t_date.getText()), (String) c_type.getSelectedItem(), (String) c_item.getSelectedItem());
     }
 
     /**
